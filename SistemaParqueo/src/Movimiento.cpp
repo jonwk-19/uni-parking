@@ -1,5 +1,6 @@
 #include "../include/Movimiento.h"
 #include <cstring>
+#include <ctime>
 
 Movimiento::Movimiento() {
     placa[0] = '\0';

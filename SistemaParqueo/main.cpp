@@ -21,6 +21,11 @@ int main() {
         cout << "9. Salir" << endl;
         cout << "Ingrese opcion: ";
         cin >> opcion;
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            opcion = 0;
+        }
 
         switch(opcion) {
             case 1: cout << "Funcionalidad en construccion." << endl; break;

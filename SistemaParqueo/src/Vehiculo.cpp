@@ -1,5 +1,6 @@
 #include "../include/Vehiculo.h"
 #include <cstring>
+#include <ctime>
 
 Vehiculo::Vehiculo() {
     placa[0] = '\0';
