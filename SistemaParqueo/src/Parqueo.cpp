@@ -1,5 +1,6 @@
 #include "../include/Parqueo.h"
 #include "../include/Utilidades.h"
+#include "../include/ArchivoBinario.h"
 #include <iostream>
 #include <climits>
 #include <ctime>
@@ -53,10 +54,16 @@ void Parqueo::ingresarVehiculo(const Vehiculo& vehiculo) {
         carriles[indiceMenor].push(vehiculo);
         std::cout << "Vehiculo " << vehiculo.placa
                   << " ingresado al carril " << (indiceMenor + 1) << "." << std::endl;
+        Movimiento mov(vehiculo.placa, MOV_ENTRADA);
+        guardarMovimiento(mov);
+        registrarPlacaSiEsNueva(vehiculo);
     } else {
         colaEspera.push(vehiculo);
         std::cout << "Parqueo lleno. Vehiculo " << vehiculo.placa
                   << " agregado a la cola de espera." << std::endl;
+        Movimiento mov(vehiculo.placa, MOV_COLA_ESPERA);
+        guardarMovimiento(mov);
+        registrarPlacaSiEsNueva(vehiculo);
     }
 }
 
@@ -150,6 +157,8 @@ void Parqueo::retirarVehiculo(const std::string& placa) {
         carriles[carrilIndex].pop();
         auxiliar.push(bloqueador);
         std::cout << "Moviendo temporalmente: " << bloqueador.placa << std::endl;
+        Movimiento movTemp(bloqueador.placa, MOV_MOVIDO_TEMPORAL);
+        guardarMovimiento(movTemp);
     }
 
     // 3. El vehiculo objetivo esta ahora en el tope; registrar salida y calcular cobro
@@ -180,12 +189,17 @@ void Parqueo::retirarVehiculo(const std::string& placa) {
     std::cout.flags(flagsAntes);
     std::cout.precision(precisionAntes);
 
+    Movimiento movSalida(vehiculo.placa, MOV_SALIDA, monto, segundos);
+    guardarMovimiento(movSalida);
+
     // 4. Regresar los vehiculos bloqueadores al carril en el orden original
     while (!auxiliar.empty()) {
         Vehiculo regreso = auxiliar.top();
         auxiliar.pop();
         carriles[carrilIndex].push(regreso);
         std::cout << "Regresando al carril: " << regreso.placa << std::endl;
+        Movimiento movRegreso(regreso.placa, MOV_REGRESADO);
+        guardarMovimiento(movRegreso);
     }
 
     // 5. Si hay espacio, ingresar vehiculos desde la cola de espera
@@ -257,5 +271,7 @@ void Parqueo::ingresarDesdeColaSiHayEspacio() {
         carriles[indiceMenor].push(vehiculo);
         std::cout << "Vehiculo " << vehiculo.placa
                   << " ingresado desde la cola al carril " << (indiceMenor + 1) << "." << std::endl;
+        Movimiento movCola(vehiculo.placa, MOV_INGRESO_COLA);
+        guardarMovimiento(movCola);
     }
 }
