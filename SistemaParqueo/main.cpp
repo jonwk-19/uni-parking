@@ -1,12 +1,43 @@
 #include <iostream>
+#include <string>
 #include "include/Parqueo.h"
 #include "include/ArchivoBinario.h"
+#include "include/Utilidades.h"
 #include "include/Reportes.h"
 #include "include/ConexionMySQL.h"
 
 using namespace std;
 
 int main() {
+    // 1. Cargar tarifa guardada; si no existe, pedirla al usuario
+    double tarifa = cargarTarifa();
+    if (tarifa < 0) {
+        cout << "No se encontro tarifa previa." << endl;
+        cout << "Ingrese la tarifa por hora: ";
+        cin >> tarifa;
+        guardarTarifa(tarifa);
+    } else {
+        cout << "Tarifa anterior: $" << tarifa << " por hora." << endl;
+        cout << "Desea cambiarla? (s/n): ";
+        char respuesta;
+        cin >> respuesta;
+        if (respuesta == 's' || respuesta == 'S') {
+            cout << "Nueva tarifa: ";
+            cin >> tarifa;
+            guardarTarifa(tarifa);
+        }
+    }
+
+    // 2. Configurar numero de carriles y capacidad
+    int cantCarriles, capPorCarril;
+    cout << "Numero de carriles: ";
+    cin >> cantCarriles;
+    cout << "Capacidad por carril: ";
+    cin >> capPorCarril;
+
+    Parqueo parqueo(cantCarriles, capPorCarril, tarifa);
+
+    // 3. Menu principal
     int opcion;
     do {
         cout << "\n=== SISTEMA DE PARQUEO ===" << endl;
@@ -28,16 +59,59 @@ int main() {
         }
 
         switch(opcion) {
-            case 1: cout << "Funcionalidad en construccion." << endl; break;
-            case 2: cout << "Funcionalidad en construccion." << endl; break;
-            case 3: cout << "Funcionalidad en construccion." << endl; break;
-            case 4: cout << "Funcionalidad en construccion." << endl; break;
-            case 5: cout << "Funcionalidad en construccion." << endl; break;
-            case 6: cout << "Funcionalidad en construccion." << endl; break;
-            case 7: cout << "Funcionalidad en construccion." << endl; break;
-            case 8: cout << "Funcionalidad en construccion." << endl; break;
-            case 9: cout << "Saliendo del sistema." << endl; break;
-            default: cout << "Opcion invalida." << endl; break;
+            case 1: {
+                string placa, marca, modelo;
+                cout << "Placa: ";
+                cin.ignore();
+                getline(cin, placa);
+                cout << "Marca: ";
+                getline(cin, marca);
+                cout << "Modelo: ";
+                getline(cin, modelo);
+                placa = convertirAMayusculas(placa);
+                Vehiculo v(placa.c_str(), marca.c_str(), modelo.c_str());
+                parqueo.ingresarVehiculo(v);
+                break;
+            }
+            case 2: {
+                string placa;
+                cout << "Placa a retirar: ";
+                cin.ignore();
+                getline(cin, placa);
+                placa = convertirAMayusculas(placa);
+                parqueo.retirarVehiculo(placa);
+                break;
+            }
+            case 3: {
+                string placa;
+                cout << "Placa a buscar: ";
+                cin.ignore();
+                getline(cin, placa);
+                placa = convertirAMayusculas(placa);
+                parqueo.buscarVehiculo(placa);
+                break;
+            }
+            case 4:
+                parqueo.mostrarEstado();
+                break;
+            case 5:
+                parqueo.mostrarColaEspera();
+                break;
+            case 6:
+                cout << "Funcionalidad de reportes en construccion." << endl;
+                break;
+            case 7:
+                cout << "Funcionalidad MySQL en construccion." << endl;
+                break;
+            case 8:
+                cout << "Funcionalidad de historial en construccion." << endl;
+                break;
+            case 9:
+                cout << "Saliendo del sistema." << endl;
+                break;
+            default:
+                cout << "Opcion invalida." << endl;
+                break;
         }
     } while(opcion != 9);
 
