@@ -105,9 +105,12 @@ void sincronizarPlacasNuevas() {
     char placa[20];
     int insertadas = 0;
     while (fread(placa, sizeof(char[20]), 1, fp) == 1) {
+        placa[19] = '\0'; // garantizar null-terminator
+        char placaEscapada[41]; // 2*20 + 1 segun mysql_real_escape_string
+        mysql_real_escape_string(conexion, placaEscapada, placa, (unsigned long)strlen(placa));
         char query[256];
         snprintf(query, sizeof(query),
-            "INSERT IGNORE INTO vehiculos (placa) VALUES ('%s')", placa);
+            "INSERT IGNORE INTO vehiculos (placa) VALUES ('%s')", placaEscapada);
         if (mysql_query(conexion, query) == 0) {
             if (mysql_affected_rows(conexion) > 0) insertadas++;
         }
@@ -138,5 +141,6 @@ void sincronizarConMySQL() {
     sincronizarResumenDiario();
     sincronizarPlacasNuevas();
     cerrarConexionMySQL();
-    std::cout << "Sincronizacion completada." << std::endl;
+    // Nota: cada funcion reporta su propio exito o error individualmente.
+    std::cout << "Proceso de sincronizacion finalizado." << std::endl;
 }

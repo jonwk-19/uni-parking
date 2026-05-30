@@ -164,19 +164,29 @@ static void escribirHTML(const std::map<std::string, DiaReporte>& dias) {
     std::cout << "Reporte HTML generado: reportes/reporte_diario.html" << std::endl;
 }
 
+// Comando wkhtmltopdf para conversion a PDF.
+// Windows: 2>nul suprime stderr. En Linux/Mac cambiar a: 2>/dev/null
+static const char* CMD_PDF =
+    "wkhtmltopdf reportes/reporte_diario.html reportes/reporte_diario.pdf 2>nul";
+
+static void intentarGenerarPDF() {
+    int resultado = system(CMD_PDF);
+    if (resultado == 0) {
+        std::cout << "Reporte PDF generado: reportes/reporte_diario.pdf" << std::endl;
+    } else {
+        std::cout << "PDF no generado automaticamente. Opciones:" << std::endl;
+        std::cout << "  1. wkhtmltopdf reportes/reporte_diario.html reportes/reporte_diario.pdf" << std::endl;
+        std::cout << "  2. Abra el HTML en el navegador y use Ctrl+P" << std::endl;
+    }
+}
+
 // Genera ambos reportes con una sola lectura del archivo binario.
 // Tambien intenta generar el PDF con wkhtmltopdf si esta disponible.
 void generarReportes() {
     std::map<std::string, DiaReporte> dias = cargarDiasReporte();
     escribirCSV(dias);
     escribirHTML(dias);
-    // PDF: intentar conversion desde el HTML recien generado
-    int resultado = system("wkhtmltopdf reportes/reporte_diario.html reportes/reporte_diario.pdf 2>nul");
-    if (resultado == 0) {
-        std::cout << "Reporte PDF generado: reportes/reporte_diario.pdf" << std::endl;
-    } else {
-        std::cout << "PDF: use wkhtmltopdf o abra el HTML en el navegador y use Ctrl+P" << std::endl;
-    }
+    intentarGenerarPDF();
 }
 
 // Genera solo el reporte CSV (lee el archivo independientemente).
@@ -189,22 +199,9 @@ void generarReporteHTML() {
     escribirHTML(cargarDiasReporte());
 }
 
-// Genera el reporte PDF convirtiendo el HTML con wkhtmltopdf.
-// El reporte PDF se genera convirtiendo el reporte HTML con wkhtmltopdf.
-// Comando: wkhtmltopdf reportes/reporte_diario.html reportes/reporte_diario.pdf
-//
-// Alternativa desde el navegador:
-// 1. Abrir reportes/reporte_diario.html en cualquier navegador
-// 2. Usar Ctrl+P (imprimir) y seleccionar "Guardar como PDF"
+// Genera el reporte PDF asegurando que el HTML este actualizado primero.
+// Conversion via wkhtmltopdf; muestra instrucciones alternativas si no esta disponible.
 void generarReportePDF() {
-    // Asegurar que el HTML existe actualizado
     generarReporteHTML();
-    int resultado = system("wkhtmltopdf reportes/reporte_diario.html reportes/reporte_diario.pdf 2>nul");
-    if (resultado == 0) {
-        std::cout << "Reporte PDF generado: reportes/reporte_diario.pdf" << std::endl;
-    } else {
-        std::cout << "PDF no generado automaticamente." << std::endl;
-        std::cout << "  Opcion 1: wkhtmltopdf reportes/reporte_diario.html reportes/reporte_diario.pdf" << std::endl;
-        std::cout << "  Opcion 2: Abra el HTML en el navegador y use Ctrl+P" << std::endl;
-    }
+    intentarGenerarPDF();
 }
