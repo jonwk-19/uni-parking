@@ -5,15 +5,22 @@
 #include <iomanip>
 #include <ctime>
 #include <cstring>
+#include <filesystem>
 
 void generarTicket(const Vehiculo& vehiculo, int tiempoSegundos, double tarifa, double total) {
-    // Build filename: tickets/ticket_PLACA_YYYYMMDD_HHMMSS.txt
-    char dateBuf[60];
+    // Asegurar que la carpeta tickets/ exista
+    std::filesystem::create_directories("tickets");
+
+    // Construir nombre del archivo: tickets/ticket_PLACA_YYYYMMDD_HHMMSS.txt
+    char dateBuf[16];
     struct tm* tm_info = localtime(&vehiculo.horaSalida);
+    if (!tm_info) {
+        std::cerr << "Error: horaSalida invalida, no se puede generar ticket." << std::endl;
+        return;
+    }
     strftime(dateBuf, sizeof(dateBuf), "%Y%m%d_%H%M%S", tm_info);
 
-    char filename[128];
-    snprintf(filename, sizeof(filename), "tickets/ticket_%s_%s.txt", vehiculo.placa, dateBuf);
+    std::string filename = std::string("tickets/ticket_") + vehiculo.placa + "_" + dateBuf + ".txt";
 
     std::ofstream file(filename);
     if (!file.is_open()) {
@@ -25,23 +32,22 @@ void generarTicket(const Vehiculo& vehiculo, int tiempoSegundos, double tarifa, 
     convertirSegundosAHMS(tiempoSegundos, h, m, s);
     int horasCobradas = calcularHorasCobrables(tiempoSegundos);
 
-    file << "========================================" << std::endl;
+    file << "========================================"  << std::endl;
     file << "TICKET DE SALIDA - SISTEMA DE PARQUEO"    << std::endl;
-    file << "========================================" << std::endl;
-    file << "Placa:         " << vehiculo.placa         << std::endl;
-    file << "Marca:         " << vehiculo.marca         << std::endl;
-    file << "Modelo:        " << vehiculo.modelo        << std::endl;
-    file << "Entrada:       " << convertirFechaHora(vehiculo.horaEntrada) << std::endl;
-    file << "Salida:        " << convertirFechaHora(vehiculo.horaSalida)  << std::endl;
-    file << "Tiempo total:  " << h << "h " << m << "m " << s << "s" << std::endl;
-    file << "Horas cobradas:" << horasCobradas          << std::endl;
+    file << "========================================"  << std::endl;
+    file << "Placa:          " << vehiculo.placa        << std::endl;
+    file << "Marca:          " << vehiculo.marca        << std::endl;
+    file << "Modelo:         " << vehiculo.modelo       << std::endl;
+    file << "Entrada:        " << convertirFechaHora(vehiculo.horaEntrada) << std::endl;
+    file << "Salida:         " << convertirFechaHora(vehiculo.horaSalida)  << std::endl;
+    file << "Tiempo total:   " << h << "h " << m << "m " << s << "s" << std::endl;
+    file << "Horas cobradas: " << horasCobradas         << std::endl;
     file << std::fixed << std::setprecision(2);
-    file << "Tarifa/hora:   $" << tarifa                << std::endl;
-    file << "Total a pagar: $" << total                 << std::endl;
+    file << "Tarifa/hora:    $" << tarifa               << std::endl;
+    file << "Total a pagar:  $" << total                << std::endl;
     file << "========================================"  << std::endl;
     file << "Gracias por usar nuestro parqueo."         << std::endl;
     file << "========================================"  << std::endl;
 
-    file.close();
     std::cout << "Ticket generado: " << filename << std::endl;
 }
