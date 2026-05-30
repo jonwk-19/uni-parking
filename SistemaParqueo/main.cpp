@@ -103,8 +103,7 @@ int main() {
                 parqueo.mostrarColaEspera();
                 break;
             case 6:
-                generarReporteCSV();
-                generarReporteHTML();
+                generarReportes();
                 break;
             case 7:
                 cout << "Funcionalidad MySQL en construccion." << endl;

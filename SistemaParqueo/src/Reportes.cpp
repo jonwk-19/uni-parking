@@ -13,13 +13,13 @@
 
 struct DiaReporte {
     std::string fecha;
-    int totalVehiculos;
+    int cantidadSalidas;
     double montoTotal;
     int totalSegundos;
-    int cantidadSalidas;
 };
 
-static std::map<std::string, DiaReporte> agregarMovimientos() {
+// Lee movimientos.dat y agrupa los registros SALIDA por fecha (YYYY-MM-DD).
+static std::map<std::string, DiaReporte> cargarDiasReporte() {
     std::vector<Movimiento> movimientos = leerMovimientos();
     std::map<std::string, DiaReporte> dias;
 
@@ -32,37 +32,39 @@ static std::map<std::string, DiaReporte> agregarMovimientos() {
         if (dias.find(fecha) == dias.end()) {
             DiaReporte d;
             d.fecha = fecha;
-            d.totalVehiculos = 0;
+            d.cantidadSalidas = 0;
             d.montoTotal = 0.0;
             d.totalSegundos = 0;
-            d.cantidadSalidas = 0;
             dias[fecha] = d;
         }
 
         dias[fecha].montoTotal += m.montoCobrado;
         dias[fecha].totalSegundos += m.tiempoSegundos;
         dias[fecha].cantidadSalidas++;
-        dias[fecha].totalVehiculos++;
     }
 
     return dias;
 }
 
-void generarReporteCSV() {
-    std::map<std::string, DiaReporte> dias = agregarMovimientos();
-
+// Escribe el reporte CSV usando datos ya cargados.
+static void escribirCSV(const std::map<std::string, DiaReporte>& dias) {
     std::ofstream archivo("reportes/reporte_diario.csv", std::ios::trunc);
+    if (!archivo.is_open()) {
+        std::cerr << "Error: no se pudo crear reportes/reporte_diario.csv" << std::endl;
+        return;
+    }
+
     archivo << "Fecha,Total Vehiculos,Monto Total,Promedio Tiempo (seg)\n";
 
     if (dias.empty()) {
-        archivo << "Sin datos,0,0.00,0\n";
+        archivo << "# Sin datos registrados\n";
     } else {
         archivo << std::fixed << std::setprecision(2);
         for (const auto& par : dias) {
             const DiaReporte& d = par.second;
             int promedio = d.cantidadSalidas > 0 ? d.totalSegundos / d.cantidadSalidas : 0;
             archivo << d.fecha << ","
-                    << d.totalVehiculos << ","
+                    << d.cantidadSalidas << ","
                     << d.montoTotal << ","
                     << promedio << "\n";
         }
@@ -72,14 +74,16 @@ void generarReporteCSV() {
     std::cout << "Reporte CSV generado: reportes/reporte_diario.csv" << std::endl;
 }
 
-void generarReporteHTML() {
-    std::map<std::string, DiaReporte> dias = agregarMovimientos();
-
-    // Get current date/time for the "Generado:" line
+// Escribe el reporte HTML usando datos ya cargados.
+static void escribirHTML(const std::map<std::string, DiaReporte>& dias) {
     time_t ahora = time(nullptr);
     std::string fechaGeneracion = convertirFechaHora(ahora);
 
     std::ofstream archivo("reportes/reporte_diario.html", std::ios::trunc);
+    if (!archivo.is_open()) {
+        std::cerr << "Error: no se pudo crear reportes/reporte_diario.html" << std::endl;
+        return;
+    }
 
     archivo << "<!DOCTYPE html>\n"
             << "<html lang=\"es\">\n"
@@ -90,7 +94,8 @@ void generarReporteHTML() {
             << "        body { font-family: Arial, sans-serif; margin: 20px; }\n"
             << "        h1 { color: #333; }\n"
             << "        table { border-collapse: collapse; width: 100%; }\n"
-            << "        th { background-color: #4CAF50; color: white; padding: 8px; text-align: left; }\n"
+            << "        th { background-color: #4CAF50; color: white; padding: 8px; "
+            << "text-align: left; border: 1px solid #aaa; }\n"
             << "        td { border: 1px solid #ddd; padding: 8px; }\n"
             << "        tr:nth-child(even) { background-color: #f2f2f2; }\n"
             << "        .total-row { font-weight: bold; background-color: #e8f5e9; }\n"
@@ -106,14 +111,12 @@ void generarReporteHTML() {
         int totalVehiculos = 0;
         double montoTotalGlobal = 0.0;
         int totalSegundosGlobal = 0;
-        int totalSalidasGlobal = 0;
 
         for (const auto& par : dias) {
             const DiaReporte& d = par.second;
-            totalVehiculos += d.totalVehiculos;
+            totalVehiculos += d.cantidadSalidas;
             montoTotalGlobal += d.montoTotal;
             totalSegundosGlobal += d.totalSegundos;
-            totalSalidasGlobal += d.cantidadSalidas;
         }
 
         archivo << "    <table>\n"
@@ -134,14 +137,13 @@ void generarReporteHTML() {
 
             archivo << "        <tr>\n"
                     << "            <td>" << d.fecha << "</td>\n"
-                    << "            <td>" << d.totalVehiculos << "</td>\n"
+                    << "            <td>" << d.cantidadSalidas << "</td>\n"
                     << "            <td>" << d.montoTotal << "</td>\n"
                     << "            <td>" << h << "h " << min << "m " << seg << "s</td>\n"
                     << "        </tr>\n";
         }
 
-        // Totals row
-        int promedioGlobalSeg = totalSalidasGlobal > 0 ? totalSegundosGlobal / totalSalidasGlobal : 0;
+        int promedioGlobalSeg = totalVehiculos > 0 ? totalSegundosGlobal / totalVehiculos : 0;
         int hG = 0, minG = 0, segG = 0;
         convertirSegundosAHMS(promedioGlobalSeg, hG, minG, segG);
 
@@ -159,4 +161,21 @@ void generarReporteHTML() {
 
     archivo.close();
     std::cout << "Reporte HTML generado: reportes/reporte_diario.html" << std::endl;
+}
+
+// Genera ambos reportes con una sola lectura del archivo binario.
+void generarReportes() {
+    std::map<std::string, DiaReporte> dias = cargarDiasReporte();
+    escribirCSV(dias);
+    escribirHTML(dias);
+}
+
+// Genera solo el reporte CSV (lee el archivo independientemente).
+void generarReporteCSV() {
+    escribirCSV(cargarDiasReporte());
+}
+
+// Genera solo el reporte HTML (lee el archivo independientemente).
+void generarReporteHTML() {
+    escribirHTML(cargarDiasReporte());
 }
