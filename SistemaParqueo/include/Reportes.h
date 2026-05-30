@@ -1,5 +1,10 @@
 #ifndef REPORTES_H
 #define REPORTES_H
-// Modulo: Reportes
-// Responsabilidad: Generar reportes CSV, HTML y PDF desde los movimientos registrados.
+
+// Genera reportes diarios desde los movimientos registrados en archivos binarios.
+// Los reportes se guardan en la carpeta reportes/.
+
+void generarReporteCSV();
+void generarReporteHTML();
+
 #endif
