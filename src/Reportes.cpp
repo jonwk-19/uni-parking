@@ -55,7 +55,7 @@ static void escribirCSV(const std::map<std::string, DiaReporte>& dias) {
         return;
     }
 
-    archivo << "Fecha,Total Vehiculos,Monto Total,Promedio Tiempo (seg)\n";
+    archivo << "Fecha,Total Vehiculos,Monto Total,Promedio Tiempo (HH:MM:SS),Promedio Tiempo (seg)\n";
 
     if (dias.empty()) {
         archivo << "# Sin datos registrados\n";
@@ -64,9 +64,12 @@ static void escribirCSV(const std::map<std::string, DiaReporte>& dias) {
         for (const auto& par : dias) {
             const DiaReporte& d = par.second;
             int promedio = d.cantidadSalidas > 0 ? d.totalSegundos / d.cantidadSalidas : 0;
+            int h = 0, m = 0, s = 0;
+            convertirSegundosAHMS(promedio, h, m, s);
             archivo << d.fecha << ","
                     << d.cantidadSalidas << ","
                     << d.montoTotal << ","
+                    << h << ":" << (m < 10 ? "0" : "") << m << ":" << (s < 10 ? "0" : "") << s << ","
                     << promedio << "\n";
         }
     }
@@ -125,7 +128,8 @@ static void escribirHTML(const std::map<std::string, DiaReporte>& dias) {
                 << "            <th>Fecha</th>\n"
                 << "            <th>Total Vehiculos</th>\n"
                 << "            <th>Monto Total ($)</th>\n"
-                << "            <th>Promedio Tiempo</th>\n"
+                << "            <th>Promedio Tiempo (HH:MM:SS)</th>\n"
+                << "            <th>Promedio Tiempo (seg)</th>\n"
                 << "        </tr>\n";
 
         archivo << std::fixed << std::setprecision(2);
@@ -140,7 +144,8 @@ static void escribirHTML(const std::map<std::string, DiaReporte>& dias) {
                     << "            <td>" << d.fecha << "</td>\n"
                     << "            <td>" << d.cantidadSalidas << "</td>\n"
                     << "            <td>" << d.montoTotal << "</td>\n"
-                    << "            <td>" << h << "h " << min << "m " << seg << "s</td>\n"
+                    << "            <td>" << h << ":" << (min < 10 ? "0" : "") << min << ":" << (seg < 10 ? "0" : "") << seg << "</td>\n"
+                    << "            <td>" << promedioSeg << "</td>\n"
                     << "        </tr>\n";
         }
 
@@ -152,7 +157,8 @@ static void escribirHTML(const std::map<std::string, DiaReporte>& dias) {
                 << "            <td>TOTAL</td>\n"
                 << "            <td>" << totalVehiculos << "</td>\n"
                 << "            <td>" << montoTotalGlobal << "</td>\n"
-                << "            <td>" << hG << "h " << minG << "m " << segG << "s</td>\n"
+                << "            <td>" << hG << ":" << (minG < 10 ? "0" : "") << minG << ":" << (segG < 10 ? "0" : "") << segG << "</td>\n"
+                << "            <td>" << promedioGlobalSeg << "</td>\n"
                 << "        </tr>\n"
                 << "    </table>\n";
     }

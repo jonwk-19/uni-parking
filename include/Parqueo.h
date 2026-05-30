@@ -37,6 +37,10 @@ public:
 
 private:
     void ingresarDesdeColaSiHayEspacio();
+    bool contienePlaca(const std::string& placa) const;
+    bool validarIntegridad() const;
+    void guardarEstadoActual() const;
+    int buscarCarrilConMenosVehiculos() const;
 };
 
 #endif

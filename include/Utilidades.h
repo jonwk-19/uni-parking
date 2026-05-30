@@ -13,5 +13,6 @@ int calcularHorasCobrables(int segundos);
 double calcularMonto(int segundos, double tarifa);
 std::string convertirAMayusculas(std::string texto);
 std::string limpiarTexto(std::string texto);
+bool esPlacaValida(const std::string& placa);
 
 #endif

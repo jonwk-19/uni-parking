@@ -2,6 +2,7 @@
 #include <cmath>
 #include <algorithm>
 #include <cctype>
+#include <regex>
 
 // Convierte un time_t a string con formato "YYYY-MM-DD HH:MM:SS"
 std::string convertirFechaHora(time_t fecha) {
@@ -52,4 +53,10 @@ std::string limpiarTexto(std::string texto) {
     // Trim trailing spaces
     size_t fin = texto.find_last_not_of(" \t\r\n");
     return texto.substr(inicio, fin - inicio + 1);
+}
+
+bool esPlacaValida(const std::string& placa) {
+    static const std::regex patron("^[A-Z0-9]+(-[A-Z0-9]+)*$");
+    if (placa.empty() || placa.size() > 19) return false;
+    return std::regex_match(placa, patron);
 }

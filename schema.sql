@@ -22,9 +22,12 @@ CREATE TABLE IF NOT EXISTS resumen_diario (
 
 CREATE TABLE IF NOT EXISTS movimientos (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    sync_uid VARCHAR(64) NOT NULL,
     placa VARCHAR(20),
     tipo_movimiento VARCHAR(50),
     fecha_hora DATETIME,
     monto_cobrado DECIMAL(10,2) DEFAULT 0.00,
-    tiempo_segundos INT DEFAULT 0
+    tiempo_segundos INT DEFAULT 0,
+    UNIQUE KEY uq_movimiento_sync_uid (sync_uid),
+    UNIQUE KEY uq_movimiento_natural (placa, tipo_movimiento, fecha_hora, tiempo_segundos, monto_cobrado)
 );

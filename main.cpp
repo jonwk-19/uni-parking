@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <limits>
 #include "include/Parqueo.h"
 #include "include/ArchivoBinario.h"
 #include "include/Utilidades.h"
@@ -8,42 +9,70 @@
 
 using namespace std;
 
-int main() {
-    // 1. Cargar tarifa guardada; si no existe o es invalida, pedirla al usuario
-    double tarifa = cargarTarifa();
-    auto pedirTarifa = [&]() {
-        do {
-            cout << "Ingrese la tarifa por hora (mayor a 0): ";
-            cin >> tarifa;
-        } while (tarifa <= 0);
-        guardarTarifa(tarifa);
-    };
+static int leerEnteroPositivo(const string& mensaje) {
+    int valor = 0;
+    while (true) {
+        cout << mensaje;
+        cin >> valor;
+        if (!cin.fail() && valor > 0) {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return valor;
+        }
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Valor invalido. Intente de nuevo." << endl;
+    }
+}
 
+static double leerDoublePositivo(const string& mensaje) {
+    double valor = 0.0;
+    while (true) {
+        cout << mensaje;
+        cin >> valor;
+        if (!cin.fail() && valor > 0) {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return valor;
+        }
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Valor invalido. Intente de nuevo." << endl;
+    }
+}
+
+static bool leerPlacaValida(string& placa) {
+    cout << "Placa: ";
+    getline(cin, placa);
+    placa = convertirAMayusculas(limpiarTexto(placa));
+    if (!esPlacaValida(placa)) {
+        cout << "Placa invalida. Use solo A-Z, 0-9 y guion (-)." << endl;
+        return false;
+    }
+    return true;
+}
+
+int main() {
+    double tarifa = cargarTarifa();
     if (tarifa <= 0) {
-        if (tarifa < 0) cout << "No se encontro tarifa previa." << endl;
-        else cout << "Tarifa guardada invalida. Ingrese una nueva." << endl;
-        pedirTarifa();
+        cout << "No se encontro tarifa valida previa." << endl;
+        tarifa = leerDoublePositivo("Ingrese la tarifa por hora (mayor a 0): ");
+        guardarTarifa(tarifa);
     } else {
         cout << "Tarifa anterior: $" << tarifa << " por hora." << endl;
         cout << "Desea cambiarla? (s/n): ";
-        char respuesta;
+        char respuesta = 'n';
         cin >> respuesta;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         if (respuesta == 's' || respuesta == 'S') {
-            pedirTarifa();
+            tarifa = leerDoublePositivo("Ingrese la tarifa por hora (mayor a 0): ");
+            guardarTarifa(tarifa);
         }
     }
 
-    // 2. Configurar numero de carriles y capacidad
-    int cantCarriles, capPorCarril;
-    cout << "Numero de carriles: ";
-    cin >> cantCarriles;
-    cout << "Capacidad por carril: ";
-    cin >> capPorCarril;
-
+    int cantCarriles = leerEnteroPositivo("Numero de carriles: ");
+    int capPorCarril = leerEnteroPositivo("Capacidad por carril: ");
     Parqueo parqueo(cantCarriles, capPorCarril, tarifa);
 
-    // 3. Menu principal
-    int opcion;
+    int opcion = 0;
     do {
         cout << "\n=== SISTEMA DE PARQUEO ===" << endl;
         cout << "1. Ingresar vehiculo" << endl;
@@ -55,44 +84,35 @@ int main() {
         cout << "7. Sincronizar con MySQL" << endl;
         cout << "8. Consultar historial por placa" << endl;
         cout << "9. Salir" << endl;
-        cout << "Ingrese opcion: ";
-        cin >> opcion;
-        if (cin.fail()) {
-            cin.clear();
-            cin.ignore(1000, '\n');
-            opcion = 0;
-        }
+        opcion = leerEnteroPositivo("Ingrese opcion: ");
 
         switch(opcion) {
             case 1: {
                 string placa, marca, modelo;
-                cout << "Placa: ";
-                cin.ignore();
-                getline(cin, placa);
+                if (!leerPlacaValida(placa)) break;
                 cout << "Marca: ";
                 getline(cin, marca);
+                marca = limpiarTexto(marca);
                 cout << "Modelo: ";
                 getline(cin, modelo);
-                placa = convertirAMayusculas(placa);
+                modelo = limpiarTexto(modelo);
+                if (marca.empty() || modelo.empty()) {
+                    cout << "Marca y modelo son obligatorios." << endl;
+                    break;
+                }
                 Vehiculo v(placa.c_str(), marca.c_str(), modelo.c_str());
                 parqueo.ingresarVehiculo(v);
                 break;
             }
             case 2: {
                 string placa;
-                cout << "Placa a retirar: ";
-                cin.ignore();
-                getline(cin, placa);
-                placa = convertirAMayusculas(placa);
+                if (!leerPlacaValida(placa)) break;
                 parqueo.retirarVehiculo(placa);
                 break;
             }
             case 3: {
                 string placa;
-                cout << "Placa a buscar: ";
-                cin.ignore();
-                getline(cin, placa);
-                placa = convertirAMayusculas(placa);
+                if (!leerPlacaValida(placa)) break;
                 parqueo.buscarVehiculo(placa);
                 break;
             }
@@ -110,10 +130,7 @@ int main() {
                 break;
             case 8: {
                 string placa;
-                cout << "Placa a consultar: ";
-                cin.ignore();
-                getline(cin, placa);
-                placa = convertirAMayusculas(placa);
+                if (!leerPlacaValida(placa)) break;
                 mostrarHistorialPlaca(placa);
                 break;
             }

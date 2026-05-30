@@ -170,13 +170,15 @@ y usar Ctrl+P para imprimirlo o guardarlo como PDF manualmente.
 Requisitos previos:
   1. Crear la base de datos ejecutando:
        mysql -u root -p < schema.sql
-  2. Editar src/ConexionMySQL.cpp y ajustar las constantes:
-       DB_HOST, DB_USER, DB_PASS (y DB_NAME si es necesario).
+  2. Configurar variables de entorno (opcional, tienen defaults):
+       PARQUEO_DB_HOST, PARQUEO_DB_USER, PARQUEO_DB_PASS,
+       PARQUEO_DB_NAME, PARQUEO_DB_PORT
   3. Recompilar el sistema con el flag -DUSAR_MYSQL (ver seccion 2).
 
 Que sincroniza:
+  - Detalle de movimientos (idempotente, sin duplicados).
   - Resumen de movimientos del dia actual.
-  - Placas nuevas registradas en la sesion.
+  - Placas nuevas.
 
 Si el sistema fue compilado sin -DUSAR_MYSQL, esta opcion muestra
 un aviso indicando que la funcionalidad no esta habilitada.
@@ -190,7 +192,7 @@ un aviso indicando que la funcionalidad no esta habilitada.
     - Cantidad total de visitas registradas.
     - Fecha y hora de la ultima visita.
     - Total acumulado pagado en todas las visitas.
-- Los datos se leen del archivo data/placas.dat.
+- Los datos se leen del archivo data/movimientos.dat.
 
 
 ========================================
@@ -201,6 +203,7 @@ un aviso indicando que la funcionalidad no esta habilitada.
   data/tarifa.dat          - Tarifa por hora guardada entre sesiones.
   data/placas.dat          - Historial de placas que han visitado
                              el parqueo (visitas y montos pagados).
+  data/estado_parqueo.dat  - Snapshot del estado activo (carriles y cola).
   reportes/                - Contiene los reportes CSV, HTML y PDF.
   tickets/                 - Un archivo .txt por cada vehiculo retirado.
                              Nombre: ticket_PLACA_FECHA.txt
@@ -211,10 +214,8 @@ un aviso indicando que la funcionalidad no esta habilitada.
 ========================================
 - Ejecutar SIEMPRE desde la carpeta SistemaParqueo/ (no desde el padre).
 - Las carpetas data/ y tickets/ se crean automaticamente en el primer uso.
-- El estado de los vehiculos estacionados se mantiene solo en memoria:
-  al cerrar el programa, los vehiculos actualmente en el parqueo NO se
-  recuperan en la siguiente sesion. Planificar las pruebas en una sola
-  sesion continua.
+- El estado de vehiculos en carriles y cola se recupera al reiniciar el
+  programa (si se usa la misma configuracion de carriles/capacidad).
 - Para presentacion academica: demostrar los 8 casos de prueba del
   enunciado dentro de la misma ejecucion del programa.
 - En Windows, si el ejecutable es bloqueado por el antivirus, compilar

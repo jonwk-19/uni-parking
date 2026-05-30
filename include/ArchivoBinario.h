@@ -13,6 +13,14 @@
 #define ARCHIVO_MOVIMIENTOS "data/movimientos.dat"
 #define ARCHIVO_TARIFA      "data/tarifa.dat"
 #define ARCHIVO_PLACAS      "data/placas.dat"
+#define ARCHIVO_ESTADO      "data/estado_parqueo.dat"
+
+struct EstadoParqueoPersistido {
+    int cantidadCarriles;
+    int capacidadPorCarril;
+    std::vector<std::vector<Vehiculo>> carriles; // bottom -> top
+    std::vector<Vehiculo> colaEspera;            // front -> back
+};
 
 // Persistencia de movimientos
 void guardarMovimiento(const Movimiento& movimiento);
@@ -28,5 +36,9 @@ void registrarPlacaSiEsNueva(const Vehiculo& vehiculo);
 
 // Muestra el historial de visitas de una placa desde los movimientos registrados.
 void mostrarHistorialPlaca(const std::string& placa);
+
+// Persistencia del estado activo del parqueo
+bool guardarEstadoParqueo(const EstadoParqueoPersistido& estado);
+bool cargarEstadoParqueo(EstadoParqueoPersistido& estado);
 
 #endif

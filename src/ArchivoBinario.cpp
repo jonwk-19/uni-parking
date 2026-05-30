@@ -4,9 +4,15 @@
 #include <cstring>
 #include <iostream>
 #include <iomanip>
+#include <filesystem>
+
+static void asegurarCarpetaData() {
+    std::filesystem::create_directories("data");
+}
 
 // Guarda un movimiento al final del archivo binario de movimientos.
 void guardarMovimiento(const Movimiento& movimiento) {
+    asegurarCarpetaData();
     FILE* fp = fopen(ARCHIVO_MOVIMIENTOS, "ab");
     if (!fp) {
         std::cerr << "Error: no se pudo abrir " << ARCHIVO_MOVIMIENTOS << " para escritura." << std::endl;
@@ -34,6 +40,7 @@ std::vector<Movimiento> leerMovimientos() {
 
 // Guarda la tarifa actual sobreescribiendo el archivo.
 void guardarTarifa(double tarifa) {
+    asegurarCarpetaData();
     FILE* fp = fopen(ARCHIVO_TARIFA, "wb");
     if (!fp) {
         std::cerr << "Error: no se pudo abrir " << ARCHIVO_TARIFA << " para escritura." << std::endl;
@@ -75,6 +82,7 @@ bool placaExiste(const std::string& placa) {
 // Registra la placa del vehiculo si aun no existe en el archivo.
 void registrarPlacaSiEsNueva(const Vehiculo& vehiculo) {
     if (!placaExiste(vehiculo.placa)) {
+        asegurarCarpetaData();
         FILE* fp = fopen(ARCHIVO_PLACAS, "ab");
         if (!fp) {
             std::cerr << "Error: no se pudo abrir " << ARCHIVO_PLACAS << " para escritura." << std::endl;
@@ -86,6 +94,113 @@ void registrarPlacaSiEsNueva(const Vehiculo& vehiculo) {
         fwrite(buffer, sizeof(char[20]), 1, fp);
         fclose(fp);
     }
+}
+
+bool guardarEstadoParqueo(const EstadoParqueoPersistido& estado) {
+    asegurarCarpetaData();
+    FILE* fp = fopen(ARCHIVO_ESTADO, "wb");
+    if (!fp) return false;
+
+    if (fwrite(&estado.cantidadCarriles, sizeof(int), 1, fp) != 1) {
+        fclose(fp);
+        return false;
+    }
+    if (fwrite(&estado.capacidadPorCarril, sizeof(int), 1, fp) != 1) {
+        fclose(fp);
+        return false;
+    }
+
+    int cantCarriles = (int)estado.carriles.size();
+    if (fwrite(&cantCarriles, sizeof(int), 1, fp) != 1) {
+        fclose(fp);
+        return false;
+    }
+
+    for (int i = 0; i < cantCarriles; i++) {
+        int cantVehiculos = (int)estado.carriles[i].size();
+        if (fwrite(&cantVehiculos, sizeof(int), 1, fp) != 1) {
+            fclose(fp);
+            return false;
+        }
+        if (cantVehiculos > 0) {
+            if (fwrite(estado.carriles[i].data(), sizeof(Vehiculo), cantVehiculos, fp) != (size_t)cantVehiculos) {
+                fclose(fp);
+                return false;
+            }
+        }
+    }
+
+    int cantCola = (int)estado.colaEspera.size();
+    if (fwrite(&cantCola, sizeof(int), 1, fp) != 1) {
+        fclose(fp);
+        return false;
+    }
+    if (cantCola > 0) {
+        if (fwrite(estado.colaEspera.data(), sizeof(Vehiculo), cantCola, fp) != (size_t)cantCola) {
+            fclose(fp);
+            return false;
+        }
+    }
+
+    fclose(fp);
+    return true;
+}
+
+bool cargarEstadoParqueo(EstadoParqueoPersistido& estado) {
+    estado.carriles.clear();
+    estado.colaEspera.clear();
+
+    FILE* fp = fopen(ARCHIVO_ESTADO, "rb");
+    if (!fp) return false;
+
+    int cantCarrilesConfig = 0;
+    int capPorCarrilConfig = 0;
+    if (fread(&cantCarrilesConfig, sizeof(int), 1, fp) != 1 ||
+        fread(&capPorCarrilConfig, sizeof(int), 1, fp) != 1 ||
+        cantCarrilesConfig <= 0 || capPorCarrilConfig <= 0) {
+        fclose(fp);
+        return false;
+    }
+    estado.cantidadCarriles = cantCarrilesConfig;
+    estado.capacidadPorCarril = capPorCarrilConfig;
+
+    int cantCarriles = 0;
+    if (fread(&cantCarriles, sizeof(int), 1, fp) != 1 || cantCarriles < 0 || cantCarriles > 1000) {
+        fclose(fp);
+        return false;
+    }
+    estado.carriles.resize(cantCarriles);
+
+    for (int i = 0; i < cantCarriles; i++) {
+        int cantVehiculos = 0;
+        if (fread(&cantVehiculos, sizeof(int), 1, fp) != 1 || cantVehiculos < 0 || cantVehiculos > 100000) {
+            fclose(fp);
+            return false;
+        }
+        if (cantVehiculos > 0) {
+            estado.carriles[i].resize(cantVehiculos);
+            if (fread(estado.carriles[i].data(), sizeof(Vehiculo), cantVehiculos, fp) != (size_t)cantVehiculos) {
+                fclose(fp);
+                return false;
+            }
+        }
+    }
+
+    int cantCola = 0;
+    if (fread(&cantCola, sizeof(int), 1, fp) != 1 || cantCola < 0 || cantCola > 100000) {
+        fclose(fp);
+        return false;
+    }
+    if (cantCola > 0) {
+        estado.colaEspera.resize(cantCola);
+        if (fread(estado.colaEspera.data(), sizeof(Vehiculo), cantCola, fp) != (size_t)cantCola) {
+            fclose(fp);
+            return false;
+        }
+    }
+
+    fclose(fp);
+    return true;
 }
 
 // Muestra el historial de visitas de una placa desde los movimientos registrados.
