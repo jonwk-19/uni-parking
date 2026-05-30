@@ -4,7 +4,9 @@
 
 // Constructor: inicializa los carriles como pilas vacias
 Parqueo::Parqueo(int cantCarriles, int capPorCarril, double tarifa)
-    : cantidadCarriles(cantCarriles), capacidadPorCarril(capPorCarril), tarifa(tarifa) {
+    : cantidadCarriles(cantCarriles > 0 ? cantCarriles : 1),
+      capacidadPorCarril(capPorCarril > 0 ? capPorCarril : 1),
+      tarifa(tarifa > 0 ? tarifa : 1.0) {
     carriles.resize(cantidadCarriles);
 }
 
@@ -65,16 +67,16 @@ void Parqueo::mostrarEstado() const {
               << " | Vehiculos estacionados: " << estacionados
               << " | Disponibles: " << disponibles << std::endl;
 
-    if (estacionados == 0) {
-        std::cout << "El parqueo esta vacio." << std::endl;
-        return;
-    }
-
     for (int i = 0; i < cantidadCarriles; i++) {
-        std::cout << "Carril " << (i + 1) << ": " << carriles[i].size()
-                  << " vehiculos" << std::endl;
+        int enCarril = (int)carriles[i].size();
+        if (enCarril == 0) {
+            std::cout << "Carril " << (i + 1) << ": (vacio)" << std::endl;
+            continue;
+        }
+        std::cout << "Carril " << (i + 1) << ": " << enCarril
+                  << " vehiculos (el ultimo en entrar aparece primero)" << std::endl;
 
-        // Copiar la pila para no modificar la original
+        // Copiar la pila para no modificar la original (LIFO: top = ultimo en entrar)
         std::stack<Vehiculo> temp = carriles[i];
         while (!temp.empty()) {
             Vehiculo v = temp.top();
@@ -110,7 +112,7 @@ double Parqueo::getTarifa() const {
     return tarifa;
 }
 
-// Setter de tarifa
+// Setter de tarifa (solo acepta valores positivos)
 void Parqueo::setTarifa(double nuevaTarifa) {
-    tarifa = nuevaTarifa;
+    if (nuevaTarifa > 0) tarifa = nuevaTarifa;
 }

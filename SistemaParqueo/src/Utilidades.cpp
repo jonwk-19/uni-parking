@@ -2,19 +2,20 @@
 #include <cmath>
 #include <algorithm>
 #include <cctype>
-#include <sstream>
 
 // Convierte un time_t a string con formato "YYYY-MM-DD HH:MM:SS"
 std::string convertirFechaHora(time_t fecha) {
     char buffer[20];
     struct tm* info = localtime(&fecha);
+    if (!info) return "fecha-invalida";
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", info);
     return std::string(buffer);
 }
 
-// Devuelve la diferencia en segundos entre inicio y fin
+// Devuelve la diferencia en segundos entre inicio y fin (minimo 0)
 int calcularSegundos(time_t inicio, time_t fin) {
-    return (int)difftime(fin, inicio);
+    int diff = (int)difftime(fin, inicio);
+    return diff < 0 ? 0 : diff;
 }
 
 // Descompone totalSegundos en horas, minutos y segundos
