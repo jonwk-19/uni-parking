@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <cstring>
 #include <ctime>
+#include <cstdlib>
 
 struct DiaReporte {
     std::string fecha;
@@ -164,10 +165,18 @@ static void escribirHTML(const std::map<std::string, DiaReporte>& dias) {
 }
 
 // Genera ambos reportes con una sola lectura del archivo binario.
+// Tambien intenta generar el PDF con wkhtmltopdf si esta disponible.
 void generarReportes() {
     std::map<std::string, DiaReporte> dias = cargarDiasReporte();
     escribirCSV(dias);
     escribirHTML(dias);
+    // PDF: intentar conversion desde el HTML recien generado
+    int resultado = system("wkhtmltopdf reportes/reporte_diario.html reportes/reporte_diario.pdf 2>nul");
+    if (resultado == 0) {
+        std::cout << "Reporte PDF generado: reportes/reporte_diario.pdf" << std::endl;
+    } else {
+        std::cout << "PDF: use wkhtmltopdf o abra el HTML en el navegador y use Ctrl+P" << std::endl;
+    }
 }
 
 // Genera solo el reporte CSV (lee el archivo independientemente).
@@ -178,4 +187,24 @@ void generarReporteCSV() {
 // Genera solo el reporte HTML (lee el archivo independientemente).
 void generarReporteHTML() {
     escribirHTML(cargarDiasReporte());
+}
+
+// Genera el reporte PDF convirtiendo el HTML con wkhtmltopdf.
+// El reporte PDF se genera convirtiendo el reporte HTML con wkhtmltopdf.
+// Comando: wkhtmltopdf reportes/reporte_diario.html reportes/reporte_diario.pdf
+//
+// Alternativa desde el navegador:
+// 1. Abrir reportes/reporte_diario.html en cualquier navegador
+// 2. Usar Ctrl+P (imprimir) y seleccionar "Guardar como PDF"
+void generarReportePDF() {
+    // Asegurar que el HTML existe actualizado
+    generarReporteHTML();
+    int resultado = system("wkhtmltopdf reportes/reporte_diario.html reportes/reporte_diario.pdf 2>nul");
+    if (resultado == 0) {
+        std::cout << "Reporte PDF generado: reportes/reporte_diario.pdf" << std::endl;
+    } else {
+        std::cout << "PDF no generado automaticamente." << std::endl;
+        std::cout << "  Opcion 1: wkhtmltopdf reportes/reporte_diario.html reportes/reporte_diario.pdf" << std::endl;
+        std::cout << "  Opcion 2: Abra el HTML en el navegador y use Ctrl+P" << std::endl;
+    }
 }
