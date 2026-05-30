@@ -172,8 +172,13 @@ void Parqueo::retirarVehiculo(const std::string& placa) {
     std::cout << "Salida:         " << convertirFechaHora(vehiculo.horaSalida)  << std::endl;
     std::cout << "Tiempo:         " << h << "h " << m << "m " << s << "s" << std::endl;
     std::cout << "Horas cobradas: " << horasCobradas << std::endl;
+    // Guardar y restaurar estado del stream para no afectar otras salidas
+    std::ios_base::fmtflags flagsAntes = std::cout.flags();
+    std::streamsize precisionAntes = std::cout.precision();
     std::cout << std::fixed << std::setprecision(2);
     std::cout << "Total a pagar:  $" << monto << std::endl;
+    std::cout.flags(flagsAntes);
+    std::cout.precision(precisionAntes);
 
     // 4. Regresar los vehiculos bloqueadores al carril en el orden original
     while (!auxiliar.empty()) {
@@ -232,11 +237,25 @@ void Parqueo::buscarVehiculo(const std::string& placa) const {
 }
 
 // Ingresa vehiculos desde la cola de espera mientras haya espacio disponible.
+// Empuja directo al carril con menos vehiculos para evitar re-encolar accidentalmente.
 void Parqueo::ingresarDesdeColaSiHayEspacio() {
     while (hayEspacio() && !colaEspera.empty()) {
         Vehiculo vehiculo = colaEspera.front();
         colaEspera.pop();
         vehiculo.horaEntrada = time(nullptr);
-        ingresarVehiculo(vehiculo);
+
+        // Buscar el carril con menos vehiculos que aun tenga espacio
+        int indiceMenor = 0;
+        int menorTamano = INT_MAX;
+        for (int i = 0; i < cantidadCarriles; i++) {
+            if ((int)carriles[i].size() < capacidadPorCarril &&
+                (int)carriles[i].size() < menorTamano) {
+                menorTamano = (int)carriles[i].size();
+                indiceMenor = i;
+            }
+        }
+        carriles[indiceMenor].push(vehiculo);
+        std::cout << "Vehiculo " << vehiculo.placa
+                  << " ingresado desde la cola al carril " << (indiceMenor + 1) << "." << std::endl;
     }
 }
