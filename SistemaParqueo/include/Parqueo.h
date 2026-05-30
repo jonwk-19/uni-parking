@@ -27,11 +27,16 @@ public:
     int vehiculosEnParqueo() const;
 
     void ingresarVehiculo(const Vehiculo& vehiculo);
+    void retirarVehiculo(const std::string& placa);
+    void buscarVehiculo(const std::string& placa) const;
     void mostrarEstado() const;
     void mostrarColaEspera() const;
 
     double getTarifa() const;
     void setTarifa(double nuevaTarifa);
+
+private:
+    void ingresarDesdeColaSiHayEspacio();
 };
 
 #endif
