@@ -106,7 +106,7 @@ int main() {
                 generarReportes();
                 break;
             case 7:
-                cout << "Funcionalidad MySQL en construccion." << endl;
+                sincronizarConMySQL();
                 break;
             case 8:
                 cout << "Funcionalidad de historial en construccion." << endl;

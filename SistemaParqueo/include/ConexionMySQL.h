@@ -1,5 +1,16 @@
 #ifndef CONEXIONMYSQL_H
 #define CONEXIONMYSQL_H
-// Modulo: ConexionMySQL
-// Responsabilidad: Conectar a MySQL y sincronizar resumen diario y placas nuevas.
+
+// Sincronizacion final de datos con MySQL.
+// Para habilitar MySQL: compilar con -DUSAR_MYSQL y enlazar con -lmysqlclient
+// Si MySQL no esta disponible, las funciones muestran un mensaje informativo.
+
+bool conectarMySQL();
+void sincronizarResumenDiario();
+void sincronizarPlacasNuevas();
+void cerrarConexionMySQL();
+
+// Wrapper que ejecuta la sincronizacion completa
+void sincronizarConMySQL();
+
 #endif
