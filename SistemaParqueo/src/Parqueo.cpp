@@ -1,6 +1,7 @@
 #include "../include/Parqueo.h"
 #include "../include/Utilidades.h"
 #include "../include/ArchivoBinario.h"
+#include "../include/Ticket.h"
 #include <iostream>
 #include <climits>
 #include <ctime>
@@ -191,6 +192,8 @@ void Parqueo::retirarVehiculo(const std::string& placa) {
 
     Movimiento movSalida(vehiculo.placa, MOV_SALIDA, monto, segundos);
     guardarMovimiento(movSalida);
+
+    generarTicket(vehiculo, segundos, tarifa, monto);
 
     // 4. Regresar los vehiculos bloqueadores al carril en el orden original
     while (!auxiliar.empty()) {

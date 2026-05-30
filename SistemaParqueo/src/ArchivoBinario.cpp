@@ -1,7 +1,9 @@
 #include "../include/ArchivoBinario.h"
+#include "../include/Utilidades.h"
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <iomanip>
 
 // Guarda un movimiento al final del archivo binario de movimientos.
 void guardarMovimiento(const Movimiento& movimiento) {
@@ -84,4 +86,36 @@ void registrarPlacaSiEsNueva(const Vehiculo& vehiculo) {
         fwrite(buffer, sizeof(char[20]), 1, fp);
         fclose(fp);
     }
+}
+
+// Muestra el historial de visitas de una placa desde los movimientos registrados.
+void mostrarHistorialPlaca(const std::string& placa) {
+    std::vector<Movimiento> movimientos = leerMovimientos();
+
+    int visitas = 0;
+    double totalPagado = 0.0;
+    std::string ultimaFecha = "";
+
+    for (const Movimiento& m : movimientos) {
+        if (std::string(m.placa) != placa) continue;
+        if (strcmp(m.tipoMovimiento, MOV_SALIDA) != 0) continue;
+        visitas++;
+        totalPagado += m.montoCobrado;
+        std::string fecha = convertirFechaHora(m.fechaHora);
+        if (fecha > ultimaFecha) ultimaFecha = fecha;
+    }
+
+    std::cout << "=== HISTORIAL DE PLACA: " << placa << " ===" << std::endl;
+    if (visitas == 0) {
+        std::cout << "No se encontraron visitas registradas para esta placa." << std::endl;
+        return;
+    }
+    std::cout << "Visitas registradas: " << visitas << std::endl;
+    std::cout << "Ultima visita:       " << ultimaFecha << std::endl;
+    std::ios_base::fmtflags flags = std::cout.flags();
+    std::streamsize prec = std::cout.precision();
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "Total pagado:        $" << totalPagado << std::endl;
+    std::cout.flags(flags);
+    std::cout.precision(prec);
 }

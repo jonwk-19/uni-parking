@@ -108,9 +108,15 @@ int main() {
             case 7:
                 sincronizarConMySQL();
                 break;
-            case 8:
-                cout << "Funcionalidad de historial en construccion." << endl;
+            case 8: {
+                string placa;
+                cout << "Placa a consultar: ";
+                cin.ignore();
+                getline(cin, placa);
+                placa = convertirAMayusculas(placa);
+                mostrarHistorialPlaca(placa);
                 break;
+            }
             case 9:
                 cout << "Saliendo del sistema." << endl;
                 break;

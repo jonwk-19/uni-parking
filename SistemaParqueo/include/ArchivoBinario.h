@@ -26,4 +26,7 @@ double cargarTarifa();  // retorna -1.0 si el archivo no existe
 bool placaExiste(const std::string& placa);
 void registrarPlacaSiEsNueva(const Vehiculo& vehiculo);
 
+// Muestra el historial de visitas de una placa desde los movimientos registrados.
+void mostrarHistorialPlaca(const std::string& placa);
+
 #endif
