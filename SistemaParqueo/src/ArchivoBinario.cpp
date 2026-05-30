@@ -15,6 +15,7 @@ void guardarMovimiento(const Movimiento& movimiento) {
 }
 
 // Lee todos los movimientos almacenados en el archivo binario.
+// Usado por Reportes (estadisticas diarias) e historial por placa (opcion 8).
 std::vector<Movimiento> leerMovimientos() {
     std::vector<Movimiento> movimientos;
     FILE* fp = fopen(ARCHIVO_MOVIMIENTOS, "rb");

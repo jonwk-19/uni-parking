@@ -9,22 +9,27 @@
 using namespace std;
 
 int main() {
-    // 1. Cargar tarifa guardada; si no existe, pedirla al usuario
+    // 1. Cargar tarifa guardada; si no existe o es invalida, pedirla al usuario
     double tarifa = cargarTarifa();
-    if (tarifa < 0) {
-        cout << "No se encontro tarifa previa." << endl;
-        cout << "Ingrese la tarifa por hora: ";
-        cin >> tarifa;
+    auto pedirTarifa = [&]() {
+        do {
+            cout << "Ingrese la tarifa por hora (mayor a 0): ";
+            cin >> tarifa;
+        } while (tarifa <= 0);
         guardarTarifa(tarifa);
+    };
+
+    if (tarifa <= 0) {
+        if (tarifa < 0) cout << "No se encontro tarifa previa." << endl;
+        else cout << "Tarifa guardada invalida. Ingrese una nueva." << endl;
+        pedirTarifa();
     } else {
         cout << "Tarifa anterior: $" << tarifa << " por hora." << endl;
         cout << "Desea cambiarla? (s/n): ";
         char respuesta;
         cin >> respuesta;
         if (respuesta == 's' || respuesta == 'S') {
-            cout << "Nueva tarifa: ";
-            cin >> tarifa;
-            guardarTarifa(tarifa);
+            pedirTarifa();
         }
     }
 
