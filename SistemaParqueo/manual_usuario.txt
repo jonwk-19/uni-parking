@@ -1,0 +1,225 @@
+========================================
+MANUAL DE USUARIO
+SISTEMA DE PARQUEO - VERSION 1.0
+========================================
+
+INDICE
+------
+1.  Requisitos del sistema
+2.  Como compilar el sistema
+3.  Como ejecutar el sistema
+4.  Inicio del programa (tarifa y configuracion)
+5.  Menu principal
+6.  Como ingresar un vehiculo (opcion 1)
+7.  Como retirar un vehiculo (opcion 2)
+8.  Como buscar un vehiculo por placa (opcion 3)
+9.  Como ver el estado del parqueo (opcion 4)
+10. Como ver la cola de espera (opcion 5)
+11. Como generar reportes (opcion 6)
+12. Como sincronizar con MySQL (opcion 7)
+13. Como consultar historial por placa (opcion 8)
+14. Archivos que genera el sistema
+15. Notas importantes
+
+
+========================================
+1. REQUISITOS DEL SISTEMA
+========================================
+- g++ con soporte C++17 (MinGW en Windows o GCC en Linux)
+- wkhtmltopdf instalado en el PATH para generacion automatica de PDF (opcional)
+- MySQL Connector/C++ solo si se desea sincronizacion con base de datos (opcional)
+- Carpeta SistemaParqueo/ presente con subcarpetas: data/, reportes/, tickets/
+  (las subcarpetas se crean automaticamente en el primer uso)
+
+
+========================================
+2. COMO COMPILAR EL SISTEMA
+========================================
+Ejecutar el siguiente comando DESDE DENTRO de la carpeta SistemaParqueo/:
+
+  Sin MySQL:
+  g++ -o SistemaParqueo main.cpp src/Vehiculo.cpp src/Movimiento.cpp \
+      src/Parqueo.cpp src/ArchivoBinario.cpp src/Reportes.cpp \
+      src/ConexionMySQL.cpp src/Ticket.cpp src/Utilidades.cpp \
+      -Iinclude -Wall -std=c++17
+
+  Con MySQL (agregar los siguientes flags al comando anterior):
+  -DUSAR_MYSQL -lmysqlclient
+
+Nota: compilar siempre con -std=c++17. Si se usa MySQL, recompilar con
+el flag correspondiente antes de intentar la sincronizacion.
+
+
+========================================
+3. COMO EJECUTAR EL SISTEMA
+========================================
+Abrir una terminal y ubicarse dentro de la carpeta SistemaParqueo/:
+
+  Windows : .\SistemaParqueo.exe
+  Linux   : ./SistemaParqueo
+
+IMPORTANTE: ejecutar siempre desde la carpeta SistemaParqueo/ para que
+las rutas relativas a data/, reportes/ y tickets/ funcionen correctamente.
+
+
+========================================
+4. INICIO DEL PROGRAMA (TARIFA Y CONFIGURACION)
+========================================
+Al iniciar, el sistema realiza los siguientes pasos:
+
+  Primera vez:
+  - Solicita la tarifa por hora (debe ser mayor a 0).
+  - Guarda la tarifa en data/tarifa.dat para sesiones futuras.
+
+  Sesiones siguientes:
+  - Muestra la tarifa guardada y pregunta si se desea cambiarla.
+
+  En ambos casos:
+  - Solicita el numero de carriles del parqueo.
+  - Solicita la capacidad maxima por carril.
+  El parqueo queda listo una vez ingresados estos valores.
+
+
+========================================
+5. MENU PRINCIPAL
+========================================
+  1. Ingresar vehiculo
+  2. Retirar vehiculo
+  3. Buscar vehiculo por placa
+  4. Ver estado del parqueo
+  5. Ver cola de espera
+  6. Generar reportes
+  7. Sincronizar con MySQL
+  8. Consultar historial por placa
+  9. Salir
+
+Ingresar el numero de la opcion deseada y presionar Enter.
+
+
+========================================
+6. COMO INGRESAR UN VEHICULO (OPCION 1)
+========================================
+- El sistema solicita: placa, marca y modelo del vehiculo.
+- La placa se convierte a mayusculas automaticamente.
+- Si hay espacio disponible:
+    "Vehiculo [PLACA] ingresado al carril N."
+- Si el parqueo esta lleno:
+    "Vehiculo [PLACA] agregado a la cola de espera."
+  El vehiculo esperara hasta que se libere un espacio.
+
+
+========================================
+7. COMO RETIRAR UN VEHICULO (OPCION 2)
+========================================
+- Ingresar la placa del vehiculo a retirar.
+- Si el vehiculo esta bloqueado por otros en el mismo carril,
+  los vehiculos que lo cubren se mueven temporalmente y regresan.
+- Se muestra el recibo con: hora de entrada, hora de salida,
+  tiempo total, horas cobradas y monto total a pagar.
+- Se genera un archivo de ticket en: tickets/ticket_PLACA_FECHA.txt
+- Si hay vehiculos en la cola de espera, el primero de la fila
+  ingresa automaticamente al carril que quedo libre.
+
+
+========================================
+8. COMO BUSCAR UN VEHICULO POR PLACA (OPCION 3)
+========================================
+- Ingresar la placa a buscar.
+- Si el vehiculo esta estacionado, se muestra:
+    placa, marca, modelo, hora de entrada y tiempo estacionado actual.
+- Si el vehiculo esta en la cola de espera, se indica
+  la posicion que ocupa en la fila.
+- Si no se encuentra, el sistema lo indica.
+
+
+========================================
+9. COMO VER EL ESTADO DEL PARQUEO (OPCION 4)
+========================================
+- Muestra un resumen general:
+    capacidad total, vehiculos estacionados y espacios disponibles.
+- Lista cada carril con los vehiculos que contiene.
+  El vehiculo que entro ultimo aparece primero en la lista
+  (estructura tipo pila - LIFO).
+
+
+========================================
+10. COMO VER LA COLA DE ESPERA (OPCION 5)
+========================================
+- Lista todos los vehiculos que esperan un espacio libre.
+- Muestra la posicion de cada vehiculo en la fila (FIFO).
+- Si no hay vehiculos en espera, se indica que la cola esta vacia.
+
+
+========================================
+11. COMO GENERAR REPORTES (OPCION 6)
+========================================
+El sistema genera tres archivos en la carpeta reportes/:
+
+  reportes/reporte_diario.csv  - Abrir con Excel u hoja de calculo.
+  reportes/reporte_diario.html - Abrir con cualquier navegador web.
+  reportes/reporte_diario.pdf  - Generado automaticamente si wkhtmltopdf
+                                  esta instalado y disponible en el PATH.
+
+Si wkhtmltopdf no esta instalado: abrir el archivo HTML en el navegador
+y usar Ctrl+P para imprimirlo o guardarlo como PDF manualmente.
+
+
+========================================
+12. COMO SINCRONIZAR CON MYSQL (OPCION 7)
+========================================
+Requisitos previos:
+  1. Crear la base de datos ejecutando:
+       mysql -u root -p < schema.sql
+  2. Editar src/ConexionMySQL.cpp y ajustar las constantes:
+       DB_HOST, DB_USER, DB_PASS (y DB_NAME si es necesario).
+  3. Recompilar el sistema con el flag -DUSAR_MYSQL (ver seccion 2).
+
+Que sincroniza:
+  - Resumen de movimientos del dia actual.
+  - Placas nuevas registradas en la sesion.
+
+Si el sistema fue compilado sin -DUSAR_MYSQL, esta opcion muestra
+un aviso indicando que la funcionalidad no esta habilitada.
+
+
+========================================
+13. COMO CONSULTAR HISTORIAL POR PLACA (OPCION 8)
+========================================
+- Ingresar la placa a consultar.
+- El sistema muestra:
+    - Cantidad total de visitas registradas.
+    - Fecha y hora de la ultima visita.
+    - Total acumulado pagado en todas las visitas.
+- Los datos se leen del archivo data/placas.dat.
+
+
+========================================
+14. ARCHIVOS QUE GENERA EL SISTEMA
+========================================
+  data/movimientos.dat     - Registro binario de todos los movimientos
+                             (entradas y salidas).
+  data/tarifa.dat          - Tarifa por hora guardada entre sesiones.
+  data/placas.dat          - Historial de placas que han visitado
+                             el parqueo (visitas y montos pagados).
+  reportes/                - Contiene los reportes CSV, HTML y PDF.
+  tickets/                 - Un archivo .txt por cada vehiculo retirado.
+                             Nombre: ticket_PLACA_FECHA.txt
+
+
+========================================
+15. NOTAS IMPORTANTES
+========================================
+- Ejecutar SIEMPRE desde la carpeta SistemaParqueo/ (no desde el padre).
+- Las carpetas data/ y tickets/ se crean automaticamente en el primer uso.
+- El estado de los vehiculos estacionados se mantiene solo en memoria:
+  al cerrar el programa, los vehiculos actualmente en el parqueo NO se
+  recuperan en la siguiente sesion. Planificar las pruebas en una sola
+  sesion continua.
+- Para presentacion academica: demostrar los 8 casos de prueba del
+  enunciado dentro de la misma ejecucion del programa.
+- En Windows, si el ejecutable es bloqueado por el antivirus, compilar
+  de nuevo y ejecutar desde la terminal (no con doble clic).
+
+========================================
+FIN DEL MANUAL
+========================================
