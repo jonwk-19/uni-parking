@@ -1,7 +1,5 @@
 #ifndef ARCHIVOBINARIO_H
 #define ARCHIVOBINARIO_H
-
 // Modulo: ArchivoBinario
-// Responsabilidad: Manejar la persistencia de datos en archivos binarios (.dat).
-
+// Responsabilidad: Leer y escribir movimientos, tarifa y placas en archivos binarios.
 #endif

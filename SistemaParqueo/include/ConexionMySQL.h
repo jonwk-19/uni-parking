@@ -1,7 +1,5 @@
 #ifndef CONEXIONMYSQL_H
 #define CONEXIONMYSQL_H
-
 // Modulo: ConexionMySQL
-// Responsabilidad: Manejar la sincronizacion de datos con una base de datos MySQL.
-
+// Responsabilidad: Conectar a MySQL y sincronizar resumen diario y placas nuevas.
 #endif

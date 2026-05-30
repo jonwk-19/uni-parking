@@ -1,7 +1,5 @@
 #ifndef PARQUEO_H
 #define PARQUEO_H
-
 // Modulo: Parqueo
-// Responsabilidad: Gestionar los espacios, cola de espera y estado general del parqueo.
-
+// Responsabilidad: Administrar carriles (pilas), cola de espera, ingreso y retiro de vehiculos.
 #endif

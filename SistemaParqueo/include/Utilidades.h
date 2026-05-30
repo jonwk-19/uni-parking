@@ -1,7 +1,5 @@
 #ifndef UTILIDADES_H
 #define UTILIDADES_H
-
 // Modulo: Utilidades
-// Responsabilidad: Proveer funciones auxiliares de uso general (formateo, validacion, etc.).
-
+// Responsabilidad: Funciones auxiliares de tiempo, precio y formato de texto.
 #endif
