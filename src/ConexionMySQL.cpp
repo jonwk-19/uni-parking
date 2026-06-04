@@ -11,7 +11,7 @@
 #include <cstdlib>
 
 #ifdef USAR_MYSQL
-#include <mysql/mysql.h>
+#include <mysql.h>
 static MYSQL* conexion = nullptr;
 static bool huboErrorSync = false;
 #endif
