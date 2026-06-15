@@ -1,0 +1,66 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ main, feature/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            shell: bash
+          - os: windows-latest
+            shell: pwsh
+          - os: macos-latest
+            shell: bash
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential libmysqlclient-dev
+
+    - name: Install dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install cmake mysql-client
+
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install cmake --yes
+        # MySQL client for Windows is optional (comment out if not needed)
+        # choco install mysql-connector-python --yes
+
+    - name: Download Catch2
+      run: |
+        mkdir -p tests
+        curl -L -o tests/catch.hpp https://raw.githubusercontent.com/catchorg/Catch2/devel/extras/catch_amalgamated.hpp
+
+    - name: Create build directory
+      run: |
+        mkdir build
+
+    - name: Configure CMake (without MySQL)
+      working-directory: ${{ github.workspace }}/build
+      run: |
+        cmake .. -DUSAR_MYSQL=OFF
+
+    - name: Build
+      working-directory: ${{ github.workspace }}/build
+      run: |
+        cmake --build . --config Release
+
+    - name: Run tests
+      working-directory: ${{ github.workspace }}/build
+      run: |
+        ctest --verbose --output-on-failure

@@ -77,3 +77,12 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# Logs
+*.log
+parqueo.log
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
